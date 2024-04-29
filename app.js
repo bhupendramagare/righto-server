@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import "./db/conn.js";
 import patientRouter from "./routes/patientRoutes.js";
+import buffetRouter from "./routes/buffetRoutes.js";
 
 const app = express();
 
@@ -14,8 +15,11 @@ app.use(express.json());
 // middleware for cors
 app.use(cors());
 
-// routes
+// patient routes
 app.use("/api/patient", patientRouter);
+
+// buffet routes
+app.use("/api/buffet", buffetRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
