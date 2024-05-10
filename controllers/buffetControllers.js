@@ -1,4 +1,5 @@
 import conn from "../db/conn.js";
+import sendMessageToTopic from "../services/mqttService.js";
 
 class Buffet {
   static getAll = (req, res) => {
@@ -14,6 +15,15 @@ class Buffet {
   static add = (req, res) => {
     // Extract buffet data from request body
     const { _id, PRODUCT_ID, NAME, CALORIES, ALLERGEN, NOTE } = req.body;
+
+    sendMessageToTopic("RightoLabel/BLE/VP0", {
+      _id,
+      PRODUCT_ID,
+      NAME,
+      CALORIES,
+      ALLERGEN,
+      NOTE,
+    });
 
     // SQL query to insert a new buffet into the database
     const sql =

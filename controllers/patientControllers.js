@@ -1,4 +1,5 @@
 import conn from "../db/conn.js";
+import sendMessageToTopic from "../services/mqttService.js";
 
 class Patient {
   static getAll = (req, res) => {
@@ -24,6 +25,18 @@ class Patient {
       PROCEDURE_NAME,
       MODE_OF_PAYMENT,
     } = req.body;
+
+    sendMessageToTopic("RightoLabel/BLE/VP0", {
+      _id,
+      PRODUCT_ID,
+      NAME,
+      AGE,
+      GENDER,
+      CONSULTING_DR,
+      ADMITTED_DATE,
+      PROCEDURE_NAME,
+      MODE_OF_PAYMENT,
+    });
 
     // SQL query to insert a new patient into the database
     const sql =
