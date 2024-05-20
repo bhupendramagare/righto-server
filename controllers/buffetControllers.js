@@ -5,58 +5,67 @@ class Buffet {
   static getAll = (req, res) => {
     conn.query("SELECT * FROM buffet", (err, result) => {
       if (err) {
-        res.status(422).json("nodata available");
+        console.error("Error fetching buffet items:", err);
+        res.status(500).json({ error: "Failed to retrieve buffet items" });
       } else {
-        res.status(201).json(result);
+        res.status(200).json(result);
       }
     });
   };
 
   static add = (req, res) => {
-    // Extract buffet data from request body
-    const { _id, PRODUCT_ID, NAME, CALORIES, ALLERGEN, NOTE } = req.body;
+    const { token, data } = req.body;
+    const { _id, PRODUCT_ID, NAME, CALORIES, ALLERGEN, NOTE } = data;
 
-    sendMessageToTopic("RightoLabel/BLE/VP0", {
-      _id,
-      PRODUCT_ID,
-      NAME,
-      CALORIES,
-      ALLERGEN,
-      NOTE,
-    });
+    sendMessageToTopic(`RightoLabel/BLE/${token}`, [
+      {
+        _id,
+        BUFFET_ID: PRODUCT_ID,
+        BUFFET_NAME: NAME,
+        BUFFET_ALLERGEN: ALLERGEN,
+        BUFFET_CALORIES: CALORIES,
+        NOTE,
+      },
+    ]);
 
-    // SQL query to insert a new buffet into the database
     const sql =
       "INSERT INTO buffet (_id, PRODUCT_ID, NAME, CALORIES, ALLERGEN, NOTE) VALUES (?, ?, ?, ?, ?, ?)";
 
-    // Execute the SQL query with buffet data
     conn.query(
       sql,
       [_id, PRODUCT_ID, NAME, CALORIES, ALLERGEN, NOTE],
       (err, result) => {
         if (err) {
-          console.error("Error adding buffet food:", err);
-          res.status(500).json({ error: "Failed to add buffet food" });
+          console.error("Error adding buffet item:", err);
+          res.status(500).json({ error: "Failed to add buffet item" });
         } else {
-          console.log("New buffet food added successfully");
+          console.log("New buffet item added successfully");
           res
             .status(201)
-            .json({ message: "New buffet food added successfully" });
+            .json({ message: "New buffet item added successfully" });
         }
       }
     );
   };
 
   static addMany = (req, res) => {
-    // Extract buffet data array from request body
-    const buffet = req.body;
+    const { token, newDataArray } = req.body;
 
-    // SQL query to insert multiple buffets into the database
+    const mqttData = newDataArray.map((element) => ({
+      BUFFET_ID: element.PRODUCT_ID,
+      BUFFET_NAME: element.NAME,
+      BUFFET_ALLERGEN: element.ALLERGEN,
+      BUFFET_CALORIES: element.CALORIES,
+    }));
+
+    console.log(mqttData);
+
+    sendMessageToTopic(`RightoLabel/BLE/${token}`, mqttData);
+
     const sql =
       "INSERT INTO buffet (_id, PRODUCT_ID, NAME, CALORIES, ALLERGEN, NOTE) VALUES ?";
 
-    // Extract values from buffets array for bulk insert
-    const values = buffet.map((item) => [
+    const values = newDataArray.map((item) => [
       item._id,
       item.PRODUCT_ID,
       item.NAME,
@@ -65,14 +74,13 @@ class Buffet {
       item.NOTE,
     ]);
 
-    // Execute the SQL query with buffet data for bulk insert
     conn.query(sql, [values], (err, result) => {
       if (err) {
-        console.error("Error inserting buffets:", err);
-        res.status(500).json({ error: "Failed to insert buffets" });
+        console.error("Error inserting buffet items:", err);
+        res.status(500).json({ error: "Failed to insert buffet items" });
       } else {
-        console.log("buffets inserted successfully");
-        res.status(201).json({ message: "buffets inserted successfully" });
+        console.log("Buffet items inserted successfully");
+        res.status(201).json({ message: "Buffet items inserted successfully" });
       }
     });
   };

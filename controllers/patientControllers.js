@@ -5,15 +5,15 @@ class Patient {
   static getAll = (req, res) => {
     conn.query("SELECT * FROM patients", (err, result) => {
       if (err) {
-        res.status(422).json("nodata available");
+        console.error("Error fetching patients:", err);
+        res.status(500).json({ error: "No data available" });
       } else {
-        res.status(201).json(result);
+        res.status(200).json(result);
       }
     });
   };
 
   static add = (req, res) => {
-    // Extract patient data from request body
     const {
       _id,
       PRODUCT_ID,
@@ -38,11 +38,11 @@ class Patient {
       MODE_OF_PAYMENT,
     });
 
-    // SQL query to insert a new patient into the database
-    const sql =
-      "INSERT INTO patients (_id, PRODUCT_ID, NAME, AGE, GENDER, CONSULTING_DR, ADMITTED_DATE, PROCEDURE_NAME, MODE_OF_PAYMENT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const sql = `
+      INSERT INTO patients (_id, PRODUCT_ID, NAME, AGE, GENDER, CONSULTING_DR, ADMITTED_DATE, PROCEDURE_NAME, MODE_OF_PAYMENT) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-    // Execute the SQL query with patient data
     conn.query(
       sql,
       [
@@ -69,14 +69,13 @@ class Patient {
   };
 
   static addMany = (req, res) => {
-    // Extract patient data array from request body
     const patients = req.body;
 
-    // SQL query to insert multiple patients into the database
-    const sql =
-      "INSERT INTO patients (_id, PRODUCT_ID, NAME, AGE, GENDER, CONSULTING_DR, ADMITTED_DATE, PROCEDURE_NAME, MODE_OF_PAYMENT) VALUES ?";
+    const sql = `
+      INSERT INTO patients (_id, PRODUCT_ID, NAME, AGE, GENDER, CONSULTING_DR, ADMITTED_DATE, PROCEDURE_NAME, MODE_OF_PAYMENT) 
+      VALUES ?
+    `;
 
-    // Extract values from patients array for bulk insert
     const values = patients.map((patient) => [
       patient._id,
       patient.PRODUCT_ID,
@@ -89,7 +88,6 @@ class Patient {
       patient.MODE_OF_PAYMENT,
     ]);
 
-    // Execute the SQL query with patient data for bulk insert
     conn.query(sql, [values], (err, result) => {
       if (err) {
         console.error("Error inserting patients:", err);
@@ -102,7 +100,6 @@ class Patient {
   };
 
   static update = (req, res) => {
-    // Extract patient data from request body
     const {
       _id,
       PRODUCT_ID,
@@ -116,7 +113,6 @@ class Patient {
     } = req.body;
     const patientId = req.params.id;
 
-    // SQL query to update the patient in the database
     const sql = `
       UPDATE patients 
       SET 
@@ -133,7 +129,6 @@ class Patient {
         _id = ?
     `;
 
-    // Execute the SQL query with patient data
     conn.query(
       sql,
       [
