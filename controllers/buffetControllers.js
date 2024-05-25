@@ -13,6 +13,21 @@ class Buffet {
     });
   };
 
+  static getAllByToken = (req, res) => {
+    const token = req.params.token;
+    conn.query(
+      `SELECT * FROM buffet WHERE PRODUCT_ID LIKE "${token}%"`,
+      (err, result) => {
+        if (err) {
+          console.error("Error fetching buffet items:", err);
+          res.status(500).json({ error: "Failed to retrieve buffet items" });
+        } else {
+          res.status(200).json(result);
+        }
+      }
+    );
+  };
+
   static add = (req, res) => {
     const { token, data } = req.body;
     const { _id, PRODUCT_ID, NAME, CALORIES, ALLERGEN, NOTE } = data;
